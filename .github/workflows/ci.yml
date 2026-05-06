@@ -23,8 +23,12 @@ jobs:
           distribution: 'temurin'
 
       # Thực thi vòng đời Maven, đảm bảo test và package chạy thành công
-      - name: Build và Test với Maven
-        run: mvn clean package
+      #- name: Build và Test với Maven
+      # run: mvn clean package
+
+      # Sửa lệnh package thành verify để Maven chạy đến phase kiểm tra JaCoCo
+      - name: Build, Test và Check Coverage với Maven
+        run: mvn clean verify
 
       # Triển khai action upload-artifact để lưu giữ tệp .jar
       - name: Lưu trữ file JAR
@@ -32,3 +36,11 @@ jobs:
         with:
           name: bank-system-executable
           path: target/*.jar
+
+      # Tải báo cáo HTML của JaCoCo lên GitHub
+      - name: Lưu trữ báo cáo JaCoCo Code Coverage
+        uses: actions/upload-artifact@v4
+        if: always() # Luôn lấy báo cáo về kể cả khi bị Đỏ (fail do ko đủ 80%)
+        with:
+          name: jacoco-report-${{ matrix.os }}
+          path: target/site/jacoco/
