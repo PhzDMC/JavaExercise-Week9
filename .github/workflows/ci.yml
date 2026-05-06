@@ -41,7 +41,7 @@ jobs:
           reporter: github-pr-review
           level: warning
           filter_mode: nofilter
-          checkstyle_config: google
+
 
       # Thực thi vòng đời Maven
       - name: Build, Test và Check Coverage với Maven
