@@ -21,6 +21,7 @@ public class SavingsAccountTest {
     java.nio.file.Path path = java.nio.file.Paths.get("folder", "file.txt");
     java.io.File file = path.toFile();
 
-    org.junit.jupiter.api.Assertions.assertEquals("folder", file.getParent(), "Đã sửa lỗi đường dẫn đa hệ điều hành!");
+    org.junit.jupiter.api.Assertions.assertEquals("folder", file.getParent(),
+        "Đã sửa lỗi đường dẫn đa hệ điều hành!");
   }
 }
