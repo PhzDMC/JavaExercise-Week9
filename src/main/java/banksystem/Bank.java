@@ -13,8 +13,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
 /**
  * Lớp đại diện cho ngân hàng, quản lý danh sách khách hàng.
  */
