@@ -1,0 +1,29 @@
+name: Java CI Automation
+
+# Kích hoạt khi có sự kiện push và pull_request
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # Cấu hình máy ảo thực thi
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cài đặt JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Thực thi vòng đời Maven, đảm bảo test và package chạy thành công
+      - name: Build và Test với Maven
+        run: mvn clean package
+
+      # Triển khai action upload-artifact để lưu giữ tệp .jar
+      - name: Lưu trữ file JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: bank-system-executable
+          path: target/*.jar
