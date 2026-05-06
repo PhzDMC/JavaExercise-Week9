@@ -3,21 +3,21 @@ name: Java CI Automation
 # Kích hoạt khi có sự kiện push và pull_request
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ] # Báo cho GitHub biết: "Hãy chạy mỗi khi có PR hướng vào nhánh main"
+    branches: [ "main" ] # Báo cho GitHub biết: "Hãy chạy mỗi khi có PR hướng vào nhánh main"
 
+# Cấp quyền bắt buộc để Bot được phép hoạt động
 permissions:
-  contents: read
-  pull-requests: write # quyền này để Bot được phép comment vào PR
-  checks: write
+  contents: read       # Quyền đọc mã nguồn
+  pull-requests: write # Quyền viết comment trực tiếp vào Pull Request
+  checks: write        # Quyền tạo các ghi chú Check (Annotations) ở dòng code lỗi
 
 jobs:
   build:
-    # Cấu hình máy ảo thực thi
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false # Giúp máy Mac/Windows vẫn chạy nếu Ubuntu bị lỗi
+      fail-fast: false # Đảm bảo nếu máy ảo Ubuntu bị lỗi thì Mac và Windows vẫn chạy đến cùng
       matrix:
         # Định nghĩa 3 hệ điều hành sẽ chạy song song
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -31,34 +31,36 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'maven' # Giữ lại thư viện Maven đã tải để dùng lại cho các lần build sau
-      # Bot review
-      - name: Automated Code Review (Checkstyle Bot)
-        if: github.event_name == 'pull_request' && runner.os == 'Linux'
-        uses: dbelyaev/action-checkstyle@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
-          level: warning
-          filter_mode: nofilter
+          cache: 'maven' # Giữ lại thư viện Maven đã tải để tăng tốc độ cho lần sau
 
-
-      # Thực thi vòng đời Maven
-      - name: Build, Test và Check Coverage với Maven
-        if: always() # luôn chạy dù Bot tìm thấy lỗi
+      # Chạy Maven nguyên bản.
+      # Không dùng cờ tẩy trắng, nên Maven sẽ báo ĐỎ (Fail) và đánh sập pipeline ngay nếu có lỗi Checkstyle.
+      - name: Build dự án và tạo báo cáo Checkstyle
+        shell: bash
         run: mvn clean verify
+
+      # Gọi Action của bên thứ 3 đọc file XML do Maven vừa sinh ra.
+      # Dùng if: failure() để Bot LUÔN CHẠY ra dọn dẹp và comment lỗi mỗi khi bước Maven ở trên bị sập.
+      - name: Bot Comment lỗi Checkstyle vào PR
+        if: failure() && github.event_name == 'pull_request' && runner.os == 'Linux'
+        uses: jwgmeligmeyling/checkstyle-github-action@master
+        with:
+          path: '**/checkstyle-result.xml' # Đường dẫn trỏ thẳng đến file báo cáo của Maven
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Checkstyle Report
 
       # Triển khai action upload-artifact để lưu giữ tệp .jar
       - name: Lưu trữ file JAR
         uses: actions/upload-artifact@v4
+        if: always() # Luôn lưu trữ file dù pipeline Xanh hay Đỏ
         with:
-          name: bank-system-executable
+          name: bank-system-executable-${{ matrix.os }}
           path: target/*.jar
 
       # Tải báo cáo HTML của JaCoCo lên GitHub
       - name: Lưu trữ báo cáo JaCoCo Code Coverage
         uses: actions/upload-artifact@v4
-        if: always() # Luôn lấy báo cáo về kể cả khi bị Đỏ (fail do ko đủ 80%)
+        if: always() # Luôn lấy báo cáo về kể cả khi pipeline bị Fail (do code bẩn)
         with:
           name: jacoco-report-${{ matrix.os }}
           path: target/site/jacoco/
