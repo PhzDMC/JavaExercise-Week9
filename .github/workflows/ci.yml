@@ -21,6 +21,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'maven' # Giữ lại thư viện Maven đã tải để dùng lại cho các lần build sau
 
       # Thực thi vòng đời Maven, đảm bảo test và package chạy thành công
       #- name: Build và Test với Maven
