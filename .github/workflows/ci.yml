@@ -5,7 +5,12 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest # Cấu hình máy ảo thực thi
+    # runs-on: ubuntu-latest # Cấu hình máy ảo thực thi
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # Định nghĩa 3 hệ điều hành sẽ chạy song song
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - name: Checkout code
